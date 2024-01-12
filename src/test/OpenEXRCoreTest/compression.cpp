@@ -370,6 +370,35 @@ struct pixels
             }
         }
     }
+    
+    void fillPFM (const char * filename)
+    {
+        FILE* file = fopen(filename, "rb");
+        char magic[3];
+        int width, height;
+        float scale;
+        
+        fscanf(file, "%2s\n", magic);
+        fscanf(file, "%d %d\n", &width, &height);
+        fscanf(file, "%f\n", &scale);
+        float * p = (float*)malloc(sizeof(float) * width * height);
+        fread(p, sizeof(float), width * height, file);
+        fclose(file);
+        
+        for (int y = 0; y < _h; ++y)
+        {
+            for (int x = 0; x < _w; ++x)
+            {
+                size_t idx = y * _stride_x + x;
+                float val = p[idx];
+                i[idx]     = val;
+                f[idx]     = val;
+                h[idx]     = val;
+                for (int c = 0; c < 4; ++c)
+                    rgba[c][idx] = val;
+            }
+        }
+    }
 
     void fillDead ()
     {
@@ -667,11 +696,11 @@ struct pixels
         }
     }
 };
-static const int IMG_WIDTH    = 1371;
-static const int IMG_HEIGHT   = 159;
-static const int IMG_STRIDE_X = 1376;
-static const int IMG_DATA_X   = 17;
-static const int IMG_DATA_Y   = 29;
+static const int IMG_WIDTH    = 768;//1371;
+static const int IMG_HEIGHT   = 576;//159;
+static const int IMG_STRIDE_X = 768;//1376;
+static const int IMG_DATA_X   = 0;//17;
+static const int IMG_DATA_Y   = 0;//29;
 
 ////////////////////////////////////////
 
@@ -1473,15 +1502,17 @@ static void
 testComp (const std::string& tempdir, exr_compression_t comp)
 {
     pixels p{IMG_WIDTH, IMG_HEIGHT, IMG_STRIDE_X};
-
-    p.fillZero ();
-    testWriteRead (p, tempdir, comp, "zeroes");
-    p.fillPattern1 ();
-    testWriteRead (p, tempdir, comp, "pattern1");
-    p.fillPattern2 ();
-    testWriteRead (p, tempdir, comp, "pattern2");
-    p.fillRandom ();
-    testWriteRead (p, tempdir, comp, "random");
+    p.fillPFM("/Users/ad/Desktop/test_zips/saved.pfm");
+    testWriteRead (p, "/Users/ad/Desktop/test_zips/", comp, "pfm");
+        
+//    p.fillZero ();
+//    testWriteRead (p, tempdir, comp, "zeroes");
+//    p.fillPattern1 ();
+//    testWriteRead (p, tempdir, comp, "pattern1");
+//    p.fillPattern2 ();
+//    testWriteRead (p, tempdir, comp, "pattern2");
+//    p.fillRandom ();
+//    testWriteRead (p, tempdir, comp, "random");
 }
 
 ////////////////////////////////////////
